@@ -1,3 +1,8 @@
+////////////////////////////////////////////////////////
+// WRITTEN BY NICOLAS TRUONG
+// Arduino bike turning signalization project
+////////////////////////////////////////////////////////
+
 //Rows
 //Pin connected to ST_CP of 74HC595(1)
 int latchPin1 = 13;
@@ -16,10 +21,10 @@ int clockPin2 = 8;
 int dataPin2 = 7;
 
 ////////////////////////////////////////////////////////
-// image 
+// IMAGES
 ////////////////////////////////////////////////////////
 
-long image0[8] = {
+long arrow0[8] = {
   B11111001,
   B11110001,
   B11100001,
@@ -30,7 +35,7 @@ long image0[8] = {
   B11111001
 };
 
-long image1[8] = {
+long arrow1[8] = {
   B11110011,
   B11100011,
   B11000011,
@@ -41,7 +46,7 @@ long image1[8] = {
   B11110011
 };
 
-long image2[8] = {
+long arrow2[8] = {
   B11100111,
   B11000111,
   B10000111,
@@ -52,7 +57,7 @@ long image2[8] = {
   B11100111
 };
 
-long image3[8] = {
+long arrow3[8] = {
   B11001111,
   B10001111,
   B00001111,
@@ -63,16 +68,59 @@ long image3[8] = {
   B11001111
 };
 
-
-
-long* leftArrow[4] = {
-  image0,
-  image1,
-  image2,
-  image3,
+long* arrow[4] = {
+  arrow0,
+  arrow1,
+  arrow2,
+  arrow3,
 };
 
-int imageSize = (sizeof(image1)/sizeof(long));
+long stop0[8] = {
+  B11000011,
+  B10000001,
+  B00000000,
+  B00000000,
+  B00000000,
+  B00000000,
+  B10000001,
+  B11000011,
+};
+
+long stop1[8] = {
+  B11000011,
+  B11000011,
+  B00100100,
+  B00011000,
+  B00011000,
+  B00100100,
+  B11000011,
+  B11000011,
+};
+
+long* stop[4] = {
+  stop0,
+  stop1,
+  stop0,
+  stop1
+};
+
+////////////////////////////////////////////////////////
+// CONSTANTS
+////////////////////////////////////////////////////////
+#define IMAGE_SIZE 8
+#define ANIMATION_SIZE 4
+#define LEFT 0
+#define RIGHT 1
+
+const int  leftButtonPin = 2;
+const int  rightButtonPin = 0;
+////////////////////////////////////////////////////////
+
+int leftButtonState = 0;
+int leftLastButtonState = 0;
+
+int rightButtonState = 0;
+int rightLastButtonState = 0;
 
 void setup() {
   pinMode(latchPin1, OUTPUT);
@@ -83,30 +131,68 @@ void setup() {
   pinMode(clockPin2, OUTPUT);
   pinMode(dataPin2, OUTPUT);
 
+  pinMode(leftButtonPin, INPUT);
+  pinMode(rightButtonPin, INPUT);
+
   Serial.begin(9600); 
 }
 
 void loop() {
-  displayPixels(50);
+  //button();
 }
 
-void displayPixels(long delayTime) {
-  for (int i=0; i<sizeof(leftArrow)/sizeof(imageSize); i++) {
+void button() {
+  leftButtonState = digitalRead(leftButtonPin);
+  rightButtonState = digitalRead(rightButtonPin);
+
+  if (leftButtonState != leftLastButtonState) {
+    while (leftButtonState == HIGH) {  
+      
+      displayArrow(40, arrow, LEFT);
+      
+      leftButtonState = digitalRead(leftButtonPin);
+    }
+  }
+
+  if (rightButtonState != rightLastButtonState) {
+    while (rightButtonState == HIGH) {  
+      
+      displayArrow(40, arrow, RIGHT);
+      
+      rightButtonState = digitalRead(rightButtonPin);
+    }
+  }
+
+  leftLastButtonState = leftButtonState;
+  rightLastButtonState = rightButtonState;
+}
+
+void displayArrow(long delayTime, long** animation, int side) {
+  
+  uint8_t order;
+  
+  if (side == LEFT) {
+    order = LSBFIRST;
+  }else{
+    order = MSBFIRST;
+  }
+
+  for (int i=0; i<ANIMATION_SIZE; i++) {
     for (int j=0; j<delayTime; j++) {
-      for (int k=0; k<imageSize; k++) {
-        int offset = k % imageSize;
+      for (int k=0; k<IMAGE_SIZE; k++) {
+        int offset = k % IMAGE_SIZE;
         long row = B10000000 >> offset;
-        long col = leftArrow[i][offset];
+        long col = animation[i][offset];
         
-        shiftOut(dataPin2, clockPin2, LSBFIRST, col);
+        shiftOut(dataPin2, clockPin2, order, col);
         digitalWrite(latchPin2, HIGH);
         digitalWrite(latchPin2, LOW);
       
-        shiftOut(dataPin1, clockPin1, LSBFIRST, row);
+        shiftOut(dataPin1, clockPin1, order, row);
         digitalWrite(latchPin1, HIGH);
         digitalWrite(latchPin1, LOW);
       
-        shiftOut(dataPin1, clockPin1, LSBFIRST, 0);
+        shiftOut(dataPin1, clockPin1, order, 0);
         digitalWrite(latchPin1, HIGH);
         digitalWrite(latchPin1, LOW);
       }
