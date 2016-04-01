@@ -147,13 +147,7 @@ void button() {
 
   if (leftButtonState != leftLastButtonState || rightButtonState != rightLastButtonState) {
 
-    while (leftButtonState == HIGH && rightButtonState == HIGH) {
-      
-      displayAnimation(40, stop, LEFT);
-      
-      leftButtonState = digitalRead(leftButtonPin);
-      rightButtonState = digitalRead(rightButtonPin);
-    }
+    
     
     while (leftButtonState == HIGH && rightButtonState == LOW) {  
       
@@ -171,6 +165,17 @@ void button() {
       leftButtonState = digitalRead(leftButtonPin);
     }
   }
+
+  if (leftButtonState != leftLastButtonState && rightButtonState != rightLastButtonState) {
+    while (leftButtonState == HIGH && rightButtonState == HIGH) {
+      
+      displayAnimation(40, stop, LEFT);
+      
+      leftButtonState = digitalRead(leftButtonPin);
+      rightButtonState = digitalRead(rightButtonPin);
+    }
+  }
+    
 
   leftLastButtonState = leftButtonState;
   rightLastButtonState = rightButtonState;
