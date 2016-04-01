@@ -113,7 +113,7 @@ long* stop[4] = {
 #define RIGHT 1
 
 const int  leftButtonPin = 2;
-const int  rightButtonPin = 0;
+const int  rightButtonPin = 4;
 ////////////////////////////////////////////////////////
 
 int leftButtonState = 0;
@@ -138,28 +138,37 @@ void setup() {
 }
 
 void loop() {
-  //button();
+  button();
 }
 
 void button() {
   leftButtonState = digitalRead(leftButtonPin);
   rightButtonState = digitalRead(rightButtonPin);
 
-  if (leftButtonState != leftLastButtonState) {
-    while (leftButtonState == HIGH) {  
+  if (leftButtonState != leftLastButtonState || rightButtonState != rightLastButtonState) {
+
+    while (leftButtonState == HIGH && rightButtonState == HIGH) {
       
-      displayArrow(40, arrow, LEFT);
+      displayAnimation(40, stop, LEFT);
       
       leftButtonState = digitalRead(leftButtonPin);
+      rightButtonState = digitalRead(rightButtonPin);
     }
-  }
-
-  if (rightButtonState != rightLastButtonState) {
-    while (rightButtonState == HIGH) {  
+    
+    while (leftButtonState == HIGH && rightButtonState == LOW) {  
       
-      displayArrow(40, arrow, RIGHT);
+      displayAnimation(40, arrow, LEFT);
+      
+      leftButtonState = digitalRead(leftButtonPin);
+      rightButtonState = digitalRead(rightButtonPin);
+    }
+    
+    while (rightButtonState == HIGH && leftButtonState == LOW) {
+ 
+      displayAnimation(40, arrow, RIGHT);
       
       rightButtonState = digitalRead(rightButtonPin);
+      leftButtonState = digitalRead(leftButtonPin);
     }
   }
 
@@ -167,7 +176,7 @@ void button() {
   rightLastButtonState = rightButtonState;
 }
 
-void displayArrow(long delayTime, long** animation, int side) {
+void displayAnimation(long delayTime, long** animation, int side) {
   
   uint8_t order;
   
