@@ -100,8 +100,8 @@ long stop1[8] = {
 long* stop[4] = {
   stop0,
   stop1,
-  stop0,
-  stop1
+  stop1,
+  stop0
 };
 
 ////////////////////////////////////////////////////////
@@ -109,8 +109,9 @@ long* stop[4] = {
 ////////////////////////////////////////////////////////
 #define IMAGE_SIZE 8
 #define ANIMATION_SIZE 4
-#define LEFT 0
-#define RIGHT 1
+#define LEFT LSBFIRST
+#define RIGHT MSBFIRST
+#define SPEED 30
 
 const int  leftButtonPin = 2;
 const int  rightButtonPin = 4;
@@ -147,11 +148,9 @@ void button() {
 
   if (leftButtonState != leftLastButtonState || rightButtonState != rightLastButtonState) {
 
-    
-    
     while (leftButtonState == HIGH && rightButtonState == LOW) {  
       
-      displayAnimation(40, arrow, LEFT);
+      displayAnimation(SPEED, arrow, LEFT);
       
       leftButtonState = digitalRead(leftButtonPin);
       rightButtonState = digitalRead(rightButtonPin);
@@ -159,7 +158,7 @@ void button() {
     
     while (rightButtonState == HIGH && leftButtonState == LOW) {
  
-      displayAnimation(40, arrow, RIGHT);
+      displayAnimation(SPEED, arrow, RIGHT);
       
       rightButtonState = digitalRead(rightButtonPin);
       leftButtonState = digitalRead(leftButtonPin);
@@ -176,20 +175,11 @@ void button() {
     }
   }
     
-
   leftLastButtonState = leftButtonState;
   rightLastButtonState = rightButtonState;
 }
 
 void displayAnimation(long delayTime, long** animation, int side) {
-  
-  uint8_t order;
-  
-  if (side == LEFT) {
-    order = LSBFIRST;
-  }else{
-    order = MSBFIRST;
-  }
 
   for (int i=0; i<ANIMATION_SIZE; i++) {
     for (int j=0; j<delayTime; j++) {
@@ -198,15 +188,15 @@ void displayAnimation(long delayTime, long** animation, int side) {
         long row = B10000000 >> offset;
         long col = animation[i][offset];
         
-        shiftOut(dataPin2, clockPin2, order, col);
+        shiftOut(dataPin2, clockPin2, side, col);
         digitalWrite(latchPin2, HIGH);
         digitalWrite(latchPin2, LOW);
       
-        shiftOut(dataPin1, clockPin1, order, row);
+        shiftOut(dataPin1, clockPin1, side, row);
         digitalWrite(latchPin1, HIGH);
         digitalWrite(latchPin1, LOW);
       
-        shiftOut(dataPin1, clockPin1, order, 0);
+        shiftOut(dataPin1, clockPin1, side, 0);
         digitalWrite(latchPin1, HIGH);
         digitalWrite(latchPin1, LOW);
       }
